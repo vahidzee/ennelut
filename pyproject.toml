@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ennelut"
+version = "0.1.0"
+description = "Efficient Neural Network Embedding for 3D Color Lookup Tables."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Vahid Zehtab", email = "contact@vahidz.com" },
+]
+dependencies = [
+    "colour-science @ git+https://github.com/colour-science/colour.git", # color science utilities and Delta-E metrics.
+    "dypy", # dynamic class/function resolution from config strings.
+    "jsonargparse[signatures]", # typed CLI/config parsing for experiments.
+    "kornia", # RGB/Lab color conversion on tensors.
+    "lightning", # Fabric training loop runtime.
+    "lightning-toolbox", # sweep/config helpers used by the training entrypoint.
+    "matplotlib", # plotting and visualization utilities.
+    "normflows", # normalizing-flow layers/reference components.
+    "opencv-python", # image loading/saving helpers.
+    "pandas", # metadata tables and result aggregation.
+    "scikit-image", # image quality and image-processing utilities.
+    "scipy", # numerical utilities used in analysis/evaluation.
+    "torch", # core tensor and neural network runtime.
+    "torchmetrics", # SSIM and image metric helpers.
+    "wandb", # experiment tracking and artifact logging.
+]
+
+[project.optional-dependencies]
+dev = [
+    "beautifulsoup4", # FreshLUTs metadata crawling.
+    "requests", # HTTP requests for metadata crawling.
+    "ruff", # linting and formatting.
+    "selenium", # browser automation for downloading FreshLUTs.
+]
+
+[tool.setuptools.packages.find]
+include = ["ennelut*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+line-ending = "lf"

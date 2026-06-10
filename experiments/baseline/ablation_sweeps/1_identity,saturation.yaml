@@ -1,0 +1,70 @@
+# used for 
+base_config:
+  fabric:
+    accelerator: gpu
+    callbacks:
+      - class_path: ennelut.training.callbacks.FabricSetupCallback
+      - class_path: ennelut.training.callbacks.FabricLogCallback
+        init_args:
+          interval: 64
+      - class_path: ennelut.training.callbacks.FabricCheckpointingCallback
+        init_args:
+          interval: 5120
+      - class_path: ennelut.training.callbacks.FabricProgressTrackerCallback
+        init_args:
+          interval: 2560
+          grid_size: 64
+      - class_path: ennelut.training.callbacks.FabricEvaluateCallback
+        init_args:
+          hald: 256
+          images: ../images/split-1/*.png
+      
+
+  data:
+    path: data/luts/freshluts/luts/*.cube
+    batch_size: 2048
+    luts_per_batch: null
+    split: 32
+
+  model:
+    coefficient: 0.
+    num_flows: 1
+    hidden_units: [64, 64, 64, 64]
+    # unify the activations
+    activation: ennelut.model.layers.LipSwish
+    actnorm: null
+    # make it as close to identity at initialization as possible
+    init_zeros: 100
+    bias: False 
+    normalized: True
+    # inputs are transformed using arctanh, predictions are transformed
+    # using tanh
+    tanh_normalization: True
+
+  training:
+    max_steps: 30721 # 30 epochs of 512 steps
+    # optimizer
+    lr: 0.04
+    optimizer: torch.optim.Adam
+
+    lr_scheduler: torch.optim.lr_scheduler.StepLR
+    lr_scheduler_args:
+      step_size: 2560 # 5 epochs of 512 steps
+      gamma: 0.5
+    progress_bar: True
+    # data is normalized to avoid saturation points of Tanh
+    normalization_constant: 0.1
+
+project: baseline
+name: identity/saturation
+method: grid
+entity: <username>
+
+metric: progress/psnr/mean
+goal: minimize
+
+seed_everything: 42
+
+parameters:
+  data.split_seed:
+    values: [313, 66, 666, 77, 13]

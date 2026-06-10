@@ -1,0 +1,67 @@
+# used to find the best architectural structure which is used through out the paper
+base_config:
+  fabric:
+    accelerator: gpu
+    callbacks:
+      - class_path: ennelut.training.callbacks.FabricSetupCallback
+      - class_path: ennelut.training.callbacks.FabricLogCallback
+        init_args:
+          interval: 64
+      - class_path: ennelut.training.callbacks.FabricCheckpointingCallback
+        init_args:
+          interval: 5120
+      - class_path: ennelut.training.callbacks.FabricProgressTrackerCallback
+        init_args:
+          interval: 1024
+          grid_size: 64
+
+  data:
+    path: experiments/luts/freshluts/luts/*.cube
+    batch_size: 2048
+    luts_per_batch: null
+
+  model:
+    # num_flows: 1
+    # hidden_units: [32, 64, 32]
+    init_zeros: 100
+    bias: True
+    # coefficient: 0.
+
+  training:
+    max_steps: 15360 # 60 epochs of 512 steps
+    # optimizer
+    lr: 0.04
+    optimizer: torch.optim.Adam
+
+    lr_scheduler: torch.optim.lr_scheduler.StepLR
+    lr_scheduler_args:
+      step_size: 2560 # 5 epochs of 512 steps
+      gamma: 0.5
+    progress_bar: True
+
+project: arch
+name: architecture-search
+method: grid
+entity: <username>
+
+metric: progress/psnr/mean
+goal: minimize
+
+seed_everything: 42
+
+parameters:
+  model.num_flows:
+    values: [1, 4, 8, 16, 24, 32]
+  model.hidden_units:
+    values:
+      - [8, 8, 8]
+      - [8, 16, 8]
+      - [8, 32, 8]
+      - [16, 16, 16]
+      - [16, 32, 16]
+      - [32, 32, 32]
+      - [32, 64, 32]
+  model.coefficient:
+    values: [0., 0.97]
+  data.split:
+    values: [1, 8, 32, 64]

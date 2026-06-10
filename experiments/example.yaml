@@ -1,0 +1,58 @@
+# example configuration file
+# read ennelut.training.config for 
+fabric:
+  accelerator: cpu
+  callbacks:
+    # list of callbacks to use for this run
+    # source codes are found in ennelut.training.callback
+    - class_path: ennelut.training.callbacks.FabricSetupCallback
+    - class_path: ennelut.training.callbacks.FabricLogCallback
+      init_args:
+        interval: 64
+    - class_path: ennelut.training.callbacks.FabricCheckpointingCallback
+      init_args:
+        interval: 5120
+    - class_path: ennelut.training.callbacks.FabricProgressTrackerCallback
+      init_args:
+        interval: 5
+        grid_size: 4
+
+data:
+  # configuration for the data
+  # paths can contain wild cards
+  # or be a list of paths (optionally containing wild cards)
+  path: data/luts/freshluts/luts/*.cube 
+  batch_size: 2048
+  luts_per_batch: 512 # null to target all
+  split: 32 # how many LUTs should be picked for training
+  split_seed: 313 # random seed for drawing the LUTs
+
+model:
+  num_flows: 1 # number of T_i's
+  hidden_units: [32, 64, 32] # structure of T_i
+  conditions_embedding: 0 # one-hot 
+  coefficient: 0 # lipchitz constant of T_i's (0 for no restriction)
+  bias: False 
+  actnorm:  ennelut.model.layers.ActNorm
+  activation: ennelut.model.layers.LipSwish
+  init_zeros: 100 # divide the initialized values by 100
+  normalized: True # data should be normalized to be in [-1, 1]
+  tanh_normalization: True # use tanh/arctanh to transform the data
+
+training:
+  max_steps: 30721 
+
+  lr: 0.04
+  optimizer: torch.optim.Adam
+
+  lr_scheduler: torch.optim.lr_scheduler.StepLR
+  lr_scheduler_args:
+    step_size: 2560 
+    gamma: 0.5
+
+  progress_bar: True
+
+logger_args:
+  # wandb parameters
+  project: lutflow-tests
+  name: example run

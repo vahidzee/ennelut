@@ -1,0 +1,88 @@
+# used to produce the comparison figure in the paper
+fabric:
+  accelerator: gpu
+  callbacks:
+    - class_path: ennelut.training.callbacks.FabricSetupCallback
+    - class_path: ennelut.training.callbacks.FabricLogCallback
+      init_args:
+        interval: 64
+    - class_path: ennelut.training.callbacks.FabricCheckpointingCallback
+      init_args:
+        interval: 5120
+    - class_path: ennelut.training.callbacks.FabricProgressTrackerCallback
+      init_args:
+        interval: 2560
+        grid_size: 64
+    - class_path: ennelut.training.callbacks.FabricEvaluateCallback
+      init_args:
+        hald: 256
+        images: ../images/split-1/*.png
+    
+
+data:
+  dataset_args: 
+    path:
+      - data/luts/freshluts/luts/18.cube
+      - data/luts/freshluts/luts/24.cube
+      - data/luts/freshluts/luts/38.cube
+      - data/luts/freshluts/luts/43.cube
+      - data/luts/freshluts/luts/58.cube
+      - data/luts/freshluts/luts/73.cube
+      - data/luts/freshluts/luts/74.cube
+      - data/luts/freshluts/luts/75.cube
+      - data/luts/freshluts/luts/108.cube
+      - data/luts/freshluts/luts/122.cube
+      - data/luts/freshluts/luts/140.cube
+      - data/luts/freshluts/luts/149.cube
+      - data/luts/freshluts/luts/208.cube
+      - data/luts/freshluts/luts/220.cube
+      - data/luts/freshluts/luts/261.cube
+      - data/luts/freshluts/luts/293.cube
+      - data/luts/freshluts/luts/297.cube
+      - data/luts/freshluts/luts/300.cube
+      - data/luts/freshluts/luts/301.cube
+      - data/luts/freshluts/luts/343.cube
+      - data/luts/freshluts/luts/396.cube
+      - data/luts/freshluts/luts/600.cube
+      - data/luts/freshluts/luts/608.cube
+      - data/luts/freshluts/luts/755.cube
+      - data/luts/freshluts/luts/774.cube
+      - data/luts/freshluts/luts/887.cube
+      - data/luts/freshluts/luts/1107.cube
+      - data/luts/freshluts/luts/1245.cube
+      - data/luts/freshluts/luts/1442.cube
+      - data/luts/freshluts/luts/1535.cube
+      - data/luts/freshluts/luts/1550.cube
+      - data/luts/freshluts/luts/1801.cube
+  batch_size: 2048
+  luts_per_batch: null
+
+model:
+  coefficient: 0.
+  num_flows: 1
+  hidden_units: [256, 256, 256, 256]
+  first_activation: torch.nn.ReLU
+  activation: torch.nn.Tanh
+  init_zeros: -1
+  first_bias: True
+  actnorm: null
+  bias: True
+  normalized: False # everything is [0, 1]
+
+training:
+  max_steps: 30721 # 30 epochs of 512 steps
+  # optimizer
+  lr: 0.002
+  optimizer: torch.optim.Adam
+
+  lr_scheduler: torch.optim.lr_scheduler.StepLR
+  lr_scheduler_args:
+    step_size: 2560 # 5 epochs of 512 steps
+    gamma: 0.5
+  progress_bar: False
+  # everything is [-1, 1]
+  normalization_constant: 0.1 # NOT IMPORTANT when normalized=False
+
+logger_args:
+  project: baseline
+  name: best-32-13

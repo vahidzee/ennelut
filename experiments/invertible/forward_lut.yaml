@@ -1,0 +1,46 @@
+# trains the forward model
+fabric:
+  accelerator: cpu
+  callbacks:
+    - class_path: ennelut.training.callbacks.FabricSetupCallback
+    - class_path: ennelut.training.callbacks.FabricLogCallback
+      init_args:
+        interval: 64
+    - class_path: ennelut.training.callbacks.FabricCheckpointingCallback
+      init_args:
+        interval: 5120
+
+data:
+  path: data/luts/freshluts/luts/600.cube
+  batch_size: 2048
+  luts_per_batch: null
+
+model:
+  num_flows: 1
+  hidden_units: [32, 64, 32]
+  conditions_embedding: 0 # one-hot
+  coefficient: 0
+  bias: False
+  actnorm:  ennelut.model.layers.ActNorm
+  activation: ennelut.model.layers.LipSwish
+  init_zeros: 100
+  normalized: True
+  tanh_normalization: True
+
+training:
+  max_steps: 30721 # 30 epochs of 512 steps
+  # optimizer
+  lr: 0.04
+  optimizer: torch.optim.Adam
+
+  lr_scheduler: torch.optim.lr_scheduler.StepLR
+  lr_scheduler_args:
+    step_size: 2560 # 5 epochs of 512 steps
+    gamma: 0.5
+  progress_bar: True
+  # data is normalized to avoid saturation points of Tanh
+  normalization_constant: 0.1
+
+logger_args:
+  project: invertible-figure
+  name: forward600

@@ -1,0 +1,64 @@
+# one model to rule them all!
+# used to reproduce the scaling figure for uniformly trained models
+base_config:
+  fabric:
+    accelerator: gpu
+    callbacks:
+      - class_path: ennelut.training.callbacks.FabricSetupCallback
+      - class_path: ennelut.training.callbacks.FabricLogCallback
+        init_args:
+          interval: 64
+      - class_path: ennelut.training.callbacks.FabricCheckpointingCallback
+        init_args:
+          interval: 5120
+      - class_path: ennelut.training.callbacks.FabricProgressTrackerCallback
+        init_args:
+          interval: 5120
+          grid_size: 64
+      - class_path: ennelut.training.callbacks.FabricEvaluateCallback
+        init_args:
+          hald: 256
+          images: ../images/split-1/*.png
+
+  data:
+    path: data/luts/freshluts/luts/*.cube
+    batch_size: 2048
+    luts_per_batch: null
+
+  model:
+    num_flows: null # set in sweep
+    hidden_units: [32, 64, 32]
+    init_zeros: 100
+    bias: False
+    coefficient: 0.
+
+  training:
+    max_steps: 30720 # 60 epochs of 512 steps
+    # optimizer
+    lr: 0.04
+    optimizer: torch.optim.Adam
+
+    lr_scheduler: torch.optim.lr_scheduler.StepLR
+    lr_scheduler_args:
+      step_size: 2560 # 5 epochs of 512 steps
+      gamma: 0.5
+    progress_bar: True
+
+project: uniform-scaling
+name: model-size-and-lut-count
+method: grid
+entity: <username>
+
+metric: progress/psnr/mean
+goal: minimize
+
+seed_everything: 42
+
+parameters:
+  # a grid of 400 runs
+  model.num_flows:
+    values: [1, 2, 3, 4] # model size
+  data.split:
+    values: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
+  data.split_seed:
+    values: [313, 66, 666, 77, 40, 7, 13, 23, 88, 99]

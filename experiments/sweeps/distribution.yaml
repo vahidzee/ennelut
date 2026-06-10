@@ -1,0 +1,71 @@
+# used to study the effect of changing the training data distribution
+# this experiment requires the construction of empirical-distr and  uniform-distr files
+base_config:
+  fabric:
+    accelerator: gpu
+    callbacks:
+      - class_path: ennelut.training.callbacks.FabricSetupCallback
+      - class_path: ennelut.training.callbacks.FabricLogCallback
+        init_args:
+          interval: 64
+      - class_path: ennelut.training.callbacks.FabricCheckpointingCallback
+        init_args:
+          interval: 5120
+      - class_path: ennelut.training.callbacks.FabricProgressTrackerCallback
+        init_args:
+          interval: 2560
+          grid_size: 64
+      - class_path: ennelut.training.callbacks.FabricEvaluateCallback
+        init_args:
+          hald: 256
+          images: ../images/*/*.png
+      
+  data:
+    path: data/luts/freshluts/luts/*.cube
+    batch_size: 2048
+    luts_per_batch: null
+
+  model:
+    num_flows: null # set in sweep
+    hidden_units: [32, 64, 32]
+    init_zeros: 100
+    bias: False
+    coefficient: 0.
+
+  training:
+    max_steps: 30720 # 60 epochs of 512 steps
+    # optimizer
+    lr: 0.04
+    optimizer: torch.optim.Adam
+
+    lr_scheduler: torch.optim.lr_scheduler.StepLR
+    lr_scheduler_args:
+      step_size: 2560 # 5 epochs of 512 steps
+      gamma: 0.5
+    objective_args:
+      lab: false
+    progress_bar: True
+
+project: space
+name: spacing
+method: grid
+entity: <username>
+
+metric: progress/psnr/mean
+goal: minimize
+
+seed_everything: 42
+
+parameters:
+  model.num_flows:
+    values: [1, 2, 3, 4] # model size
+  data.dataset_args.space:
+    values:
+      - empirical-distr.pt
+      - uniform-distr.pt
+  data.split:
+    values: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
+  data.split_seed:
+    values: [313, 66, 666, 77, 13]
+  training.objective_args.lab:
+    values: [false, true]

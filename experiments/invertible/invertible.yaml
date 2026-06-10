@@ -1,0 +1,50 @@
+# trains the invertible conditional model
+fabric:
+  accelerator: gpu
+  callbacks:
+    - class_path: ennelut.training.callbacks.FabricSetupCallback
+    - class_path: ennelut.training.callbacks.FabricLogCallback
+      init_args:
+        interval: 64
+    - class_path: ennelut.training.callbacks.FabricCheckpointingCallback
+      init_args:
+        interval: 5120
+    - class_path: ennelut.training.callbacks.FabricProgressTrackerCallback
+      init_args:
+        interval: 2560
+        grid_size: 64
+    
+data:
+  path: data/luts/freshluts/luts/*.cube
+  batch_size: 2048
+  split: 32
+  split_seed: 13
+
+model:
+  num_flows: 24
+  hidden_units: [8, 32, 8]
+  bias: False
+  coefficient: 0.97
+  actnorm:  ennelut.model.layers.ActNorm
+  activation: ennelut.model.layers.LipSwish
+  init_zeros: 100
+  normalized: True
+  tanh_normalization: True
+
+training:
+  max_steps: 30721 # 30 epochs of 512 steps
+  # optimizer
+  lr: 0.04
+  optimizer: torch.optim.Adam
+
+  lr_scheduler: torch.optim.lr_scheduler.StepLR
+  lr_scheduler_args:
+    step_size: 2560 # 5 epochs of 512 steps
+    gamma: 0.5
+  progress_bar: False
+  # data is normalized to avoid saturation points of Tanh
+  normalization_constant: 0.1
+
+logger_args:
+  project: invertible-figure
+  name: invertible
